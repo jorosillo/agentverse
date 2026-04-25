@@ -1,0 +1,438 @@
+// ============================================================================
+// AgentVerse MVP — Prisma Schema
+// Base de datos: PostgreSQL (Neon)
+// Fuente: plan.txt + AgentVerse.md ERDs
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  DEVELOPER
+  COMPANY
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ExperienceLevel {
+  YEARS_1_2  // 1-2 años
+  YEARS_2_4  // 2-4 años
+  YEARS_4_6  // 4-6 años
+  YEARS_6_10 // 6-10 años
+  YEARS_10   // 10+ años
+}
+
+enum CompanySize {
+  SIZE_1_10    // 1-10 empleados
+  SIZE_11_50   // 11-50 empleados
+  SIZE_51_200  // 51-200 empleados
+  SIZE_201_500 // 201-500 empleados
+  SIZE_500     // 500+ empleados
+}
+
+enum Industry {
+  TECHNOLOGY
+  FINANCE
+  HEALTH
+  EDUCATION
+  RETAIL
+  OTHER
+}
+
+enum PaymentType {
+  FIXED    // Fijo
+  MONTHLY  // Por mes
+  HOURLY   // Por hora
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum ConversationStatus {
+  PENDING
+  IN_PROGRESS
+  PENDING_CERTIFICATION
+  COMPLETED
+  CANCELLED
+  ISSUE_REPORTED
+}
+
+enum ReportCategory {
+  FRAUD
+  SPAM
+  COPYRIGHT
+  OFFENSIVE
+  OTHER
+}
+
+enum ReputationEventType {
+  AGREEMENT_COMPLETED
+  AGREEMENT_CANCELLED
+  REVIEW_RECEIVED
+  PENALTY_APPLIED
+  BADGE_EARNED
+}
+
+// ============================================================================
+// MODELOS DE IDENTIDAD Y AUTENTICACIÓN
+// ============================================================================
+
+/// Modelo principal de usuario. Contiene credenciales y metadatos transversales.
+/// Los perfiles específicos por rol se modelan en DeveloperProfile y CompanyProfile.
+model User {
+  id                    String       @id @default(uuid()) @db.Uuid
+  email                 String       @unique
+  passwordHash          String
+  role                  UserRole
+  status                UserStatus   @default(ACTIVE)
+  isEmailVerified       Boolean      @default(false)
+  onboardingCompleted   Boolean      @default(false)
+  emailPreferences      Boolean      @default(true)
+  reputationScore       Float        @default(0)
+  avatarUrl             String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  // Relaciones 1:1 con perfiles por rol
+  developerProfile      DeveloperProfile?
+  companyProfile        CompanyProfile?
+
+  // Relaciones 1:N con contenido publicado
+  agents                Agent[]
+  jobs                  Job[]
+
+  // Relaciones con conversaciones (como participante A o B)
+  conversationsAsA      Conversation[]      @relation("ParticipantA")
+  conversationsAsB      Conversation[]      @relation("ParticipantB")
+
+  // Relaciones con mensajes enviados
+  messagesSent          Message[]
+
+  // Relaciones con reviews (como reviewer y como target)
+  reviewsGiven          ReviewFeedback[]    @relation("ReviewAuthor")
+  reviewsReceived       ReviewFeedback[]    @relation("ReviewTarget")
+
+  // Tokens de autenticación
+  passwordResetTokens   PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  // Moderación
+  reportsSubmitted      Report[]            @relation("Reporter")
+  reportsReceived       Report[]            @relation("ReportedUser")
+  blockedUsers          BlockList[]         @relation("Blocker")
+  blockedByUsers        BlockList[]         @relation("Blocked")
+
+  // Historial de reputación
+  reputationEvents      ReputationEvent[]
+
+  @@map("users")
+}
+
+/// Perfil específico del rol DEVELOPER.
+/// Campos: nombre completo, región, GitHub (opcional), skills, nivel de experiencia.
+model DeveloperProfile {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @unique @db.Uuid
+  fullName        String
+  region          String
+  githubUrl       String?
+  skills          String[]        // Array de habilidades técnicas
+  experienceLevel ExperienceLevel
+  bio             String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("developer_profiles")
+}
+
+/// Perfil específico del rol COMPANY.
+/// Campos: nombre de empresa, industria, tamaño, website (opcional).
+model CompanyProfile {
+  id           String      @id @default(uuid()) @db.Uuid
+  userId       String      @unique @db.Uuid
+  companyName  String
+  industry     Industry
+  size         CompanySize
+  website      String?
+  description  String?     @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("company_profiles")
+}
+
+// ============================================================================
+// MODELOS DE TOKENS DE AUTENTICACIÓN
+// ============================================================================
+
+/// Token de restablecimiento de contraseña (uso único, caduca en 30 min).
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+/// Token de verificación de correo electrónico (enlace único enviado via Resend).
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
+}
+
+// ============================================================================
+// MODELOS DE MARKETPLACE (AGENTES Y OFERTAS)
+// ============================================================================
+
+/// Categoría para clasificar agentes y ofertas.
+model Category {
+  id             String              @id @default(uuid()) @db.Uuid
+  name           String              @unique
+  slug           String              @unique
+  createdAt      DateTime            @default(now())
+
+  // Relaciones N:M a través de tablas pivote
+  agentRelations AgentCategoryRelation[]
+  jobRelations   JobCategoryRelation[]
+
+  @@map("categories")
+}
+
+/// Tabla pivote: relación N:M entre Agent y Category.
+model AgentCategoryRelation {
+  agentId    String   @db.Uuid
+  categoryId String   @db.Uuid
+
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([agentId, categoryId])
+  @@map("agent_category_relations")
+}
+
+/// Tabla pivote: relación N:M entre Job y Category.
+model JobCategoryRelation {
+  jobId      String   @db.Uuid
+  categoryId String   @db.Uuid
+
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, categoryId])
+  @@map("job_category_relations")
+}
+
+/// Agente de IA publicado por un Developer.
+/// Campos sensibles anti-scraping: price, paymentType, authorId (ocultos a otros DEVELOPER).
+model Agent {
+  id               String          @id @default(uuid()) @db.Uuid
+  authorId         String          @db.Uuid
+  name             String          @db.VarChar(100)
+  shortDescription String          @db.VarChar(100)
+  longDescription  String          @db.Text // Markdown, máx 10000 chars validado en Zod
+  technologies     String[]        // Array libre de tecnologías
+  paymentType      PaymentType
+  price            Float?          // Nullable para permitir "gratuito" o censura anti-scraping
+  images           String[]        // URLs de imágenes almacenadas en Vercel Blob
+  viewCount        Int             @default(0)
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relaciones
+  author           User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categories       AgentCategoryRelation[]
+  conversations    Conversation[]  @relation("ConversationAgent")
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("agents")
+}
+
+/// Oferta de trabajo publicada por una Company.
+/// Campos sensibles anti-scraping: budget, paymentType, ownerCompanyId (ocultos a otras COMPANY).
+model Job {
+  id               String          @id @default(uuid()) @db.Uuid
+  ownerCompanyId   String          @db.Uuid
+  name             String          @db.VarChar(100)
+  shortDescription String          @db.VarChar(100)
+  longDescription  String          @db.Text // Markdown, máx 10000 chars validado en Zod
+  technologies     String[]        // Array libre de tecnologías requeridas
+  paymentType      PaymentType
+  budget           Float?          // Nullable para censura anti-scraping
+  images           String[]        // URLs de imágenes adjuntas
+  viewCount        Int             @default(0)
+  status           JobStatus       @default(OPEN)
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relaciones
+  ownerCompany     User            @relation(fields: [ownerCompanyId], references: [id], onDelete: Cascade)
+  categories       JobCategoryRelation[]
+  conversations    Conversation[]  @relation("ConversationJob")
+
+  @@index([ownerCompanyId])
+  @@index([createdAt])
+  @@map("jobs")
+}
+
+// ============================================================================
+// MODELOS DE NEGOCIACIÓN Y MENSAJERÍA
+// ============================================================================
+
+/// Conversación entre dos usuarios, vinculada opcionalmente a un Agent o Job.
+/// Contiene la máquina de estados del acuerdo (PENDING → IN_PROGRESS → ... → COMPLETED).
+model Conversation {
+  id             String              @id @default(uuid()) @db.Uuid
+  participantAId String              @db.Uuid  // Quien inicia la conversación
+  participantBId String              @db.Uuid  // El otro participante
+  jobId          String?             @db.Uuid  // Vinculada a oferta (opcional, exclusión mutua con agentId)
+  agentId        String?             @db.Uuid  // Vinculada a agente (opcional, exclusión mutua con jobId)
+  status         ConversationStatus  @default(PENDING)
+  agreedPrice    Float?              // Registrado al aceptar propuesta (mock payment)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  // Relaciones
+  participantA   User                @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB   User                @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
+  job            Job?                @relation("ConversationJob", fields: [jobId], references: [id], onDelete: SetNull)
+  agent          Agent?              @relation("ConversationAgent", fields: [agentId], references: [id], onDelete: SetNull)
+  messages       Message[]
+  reviews        ReviewFeedback[]
+
+  @@index([participantAId])
+  @@index([participantBId])
+  @@index([status])
+  @@map("conversations")
+}
+
+/// Mensaje individual dentro de una conversación.
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  senderId       String       @db.Uuid
+  content        String       @db.Text
+  isSystemMessage Boolean     @default(false) // Mensajes generados por el sistema (ej: "Acuerdo iniciado")
+  createdAt      DateTime     @default(now())
+
+  // Relaciones
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+/// Valoración post-acuerdo. Triple rúbrica (1-5) + comentario opcional.
+/// Restricción UNIQUE: solo una review por reviewer por conversación.
+model ReviewFeedback {
+  id                  String       @id @default(uuid()) @db.Uuid
+  conversationId      String       @db.Uuid
+  reviewerId          String       @db.Uuid  // Quien deja la review
+  targetId            String       @db.Uuid  // Quien recibe la review
+  professionalRating  Int          @db.SmallInt // 1-5; validado en Zod
+  fulfillmentRating   Int          @db.SmallInt // 1-5; validado en Zod
+  communicationRating Int          @db.SmallInt // 1-5; validado en Zod
+  comment             String?      @db.Text
+  createdAt           DateTime     @default(now())
+
+  // Relaciones
+  conversation        Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  reviewer            User         @relation("ReviewAuthor", fields: [reviewerId], references: [id], onDelete: Cascade)
+  target              User         @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  // Constraint UNIQUE: un reviewer solo puede valorar una vez por conversación
+  @@unique([conversationId, reviewerId])
+  @@map("review_feedbacks")
+}
+
+// ============================================================================
+// MODELOS DE MODERACIÓN Y CONFIANZA
+// ============================================================================
+
+/// Reporte de un usuario por otro.
+model Report {
+  id             String         @id @default(uuid()) @db.Uuid
+  reporterId     String         @db.Uuid
+  reportedUserId String         @db.Uuid
+  category       ReportCategory
+  reason         String?        @db.Text
+  resolved       Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+
+  // Relaciones
+  reporter       User           @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser   User           @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+/// Lista de bloqueo entre usuarios.
+/// Si A bloquea a B, las queries deben excluir interacciones de B hacia A.
+model BlockList {
+  id         String   @id @default(uuid()) @db.Uuid
+  blockerId  String   @db.Uuid
+  blockedId  String   @db.Uuid
+  createdAt  DateTime @default(now())
+
+  // Relaciones
+  blocker    User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked    User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  // Constraint UNIQUE: un usuario solo puede bloquear a otro una vez
+  @@unique([blockerId, blockedId])
+  @@map("block_lists")
+}
+
+/// Evento de reputación para auditoría y cálculo progresivo.
+/// Usado por el CRON job para computar reputationScore del User.
+model ReputationEvent {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  type      ReputationEventType
+  value     Float               @default(0) // Valor positivo o negativo del evento
+  metadata  Json?               // Datos adicionales del evento (conversationId, etc)
+  createdAt DateTime            @default(now())
+
+  // Relaciones
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("reputation_events")
+}
