@@ -20,7 +20,7 @@ export default async function NewAgentPage() {
   if (session.role !== 'DEVELOPER') redirect('/dashboard');
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-narrow">
       <Link
         href="/agents"
         className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors"

@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Cpu, FileText, Code2, DollarSign, Upload, X, Plus, CheckCircle2,
+  Cpu, Code2, DollarSign, Upload, X, Plus, CheckCircle2,
 } from 'lucide-react';
 import { createAgentSchema, type CreateAgentInput } from '@/lib/schemas/agent.schema';
 import { createAgent } from '@/server-actions/agent.actions';
@@ -130,9 +130,9 @@ export function CreateAgentForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
       {/* Basic info */}
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-5">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Cpu className="h-5 w-5 text-violet-400" />
           Información del agente
@@ -161,7 +161,7 @@ export function CreateAgentForm() {
           <textarea
             id="agent-long-desc"
             rows={8}
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 hover:border-white/20 transition-all resize-none font-mono"
+            className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 hover:border-white/20 transition-all resize-none font-mono"
             placeholder="Describe tu agente en detalle. Soporta Markdown..."
             {...register('longDescription')}
           />
@@ -172,14 +172,14 @@ export function CreateAgentForm() {
       </div>
 
       {/* Technologies */}
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-4">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Code2 className="h-5 w-5 text-violet-400" />
           Tecnologías
         </h2>
 
         {/* Custom input */}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={techInput}
@@ -236,7 +236,7 @@ export function CreateAgentForm() {
       </div>
 
       {/* Pricing */}
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-5">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-violet-400" />
           Precios
@@ -261,7 +261,7 @@ export function CreateAgentForm() {
       </div>
 
       {/* Images */}
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-4">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Upload className="h-5 w-5 text-violet-400" />
           Imágenes <span className="text-xs text-gray-500 font-normal">({imageUrls.length}/{MAX_IMAGES})</span>

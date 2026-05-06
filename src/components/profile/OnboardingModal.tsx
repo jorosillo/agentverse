@@ -136,12 +136,12 @@ export function OnboardingModal({ role }: { role: string }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-[#111118] shadow-2xl overflow-hidden">
+      <div className="relative max-h-[calc(100svh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111118] shadow-2xl">
         {/* Progress bar */}
         <div className="h-1 bg-white/5">
           <div
@@ -159,7 +159,7 @@ export function OnboardingModal({ role }: { role: string }) {
         </button>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-5 sm:p-6 lg:p-8">
           {/* Step indicator */}
           <div className="flex items-center gap-2 mb-6">
             {steps.map((_, i) => (
@@ -198,7 +198,7 @@ export function OnboardingModal({ role }: { role: string }) {
           </ul>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
             <button
               onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
               disabled={currentStep === 0}

@@ -109,9 +109,9 @@ export function EditJobForm({ job }: Props) {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
         {/* Info */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-5">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-blue-400" />
             Información de la oferta
@@ -125,7 +125,7 @@ export function EditJobForm({ job }: Props) {
             <textarea
               id="edit-job-long"
               rows={8}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 hover:border-white/20 transition-all resize-none font-mono"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 hover:border-white/20 transition-all resize-none font-mono"
               {...register('longDescription')}
             />
             {errors.longDescription?.message && <p className="text-xs text-red-400">{errors.longDescription.message}</p>}
@@ -133,13 +133,13 @@ export function EditJobForm({ job }: Props) {
         </div>
 
         {/* Technologies */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-4">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <Code2 className="h-5 w-5 text-blue-400" />
             Tecnologías requeridas
           </h2>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               type="text"
               value={techInput}
@@ -179,7 +179,7 @@ export function EditJobForm({ job }: Props) {
         </div>
 
         {/* Budget */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-5">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-blue-400" />
             Presupuesto
@@ -190,7 +190,7 @@ export function EditJobForm({ job }: Props) {
 
         {/* Images */}
         {imageUrls.length > 0 && (
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-4">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Upload className="h-5 w-5 text-blue-400" />
               Material adjunto
@@ -240,7 +240,7 @@ export function EditJobForm({ job }: Props) {
               Eliminar
             </Button>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button variant="secondary" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
               <Button size="sm" isLoading={isDeleting} onClick={handleDelete} className="!bg-red-600 hover:!bg-red-700">Confirmar</Button>
             </div>

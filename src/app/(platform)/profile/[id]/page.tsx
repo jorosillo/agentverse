@@ -38,9 +38,9 @@ export default async function PublicProfilePage({ params }: Props) {
   const name = devProfile?.fullName || compProfile?.companyName || 'Usuario';
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-medium">
       {/* Header card */}
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8 mb-6">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-8 lg:p-10 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row gap-6 items-start">
           {/* Avatar */}
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-white/10 flex-shrink-0">
@@ -50,8 +50,8 @@ export default async function PublicProfilePage({ params }: Props) {
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-white truncate">{name}</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-1">
+              <h1 className="text-2xl font-bold text-white break-words">{name}</h1>
               <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
                 isDeveloper
                   ? 'bg-violet-600/15 text-violet-300 border border-violet-500/20'
@@ -131,9 +131,9 @@ export default async function PublicProfilePage({ params }: Props) {
       </div>
 
       {/* Details section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
         {/* Left: About */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
           <h2 className="text-lg font-semibold text-white mb-4">Sobre</h2>
 
           {isDeveloper && devProfile && (
@@ -155,7 +155,7 @@ export default async function PublicProfilePage({ params }: Props) {
               {compProfile.description && (
                 <p className="text-sm text-gray-300 leading-relaxed">{compProfile.description}</p>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <span className="text-xs text-gray-500 uppercase tracking-wider">Sector</span>
                   <p className="text-sm text-white mt-1 flex items-center gap-1.5">
@@ -177,7 +177,7 @@ export default async function PublicProfilePage({ params }: Props) {
 
         {/* Right: Skills (Developer) or empty CTA */}
         {isDeveloper && devProfile && devProfile.skills.length > 0 && (
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h2 className="text-lg font-semibold text-white mb-4">Habilidades</h2>
             <div className="flex flex-wrap gap-2">
               {devProfile.skills.map((skill) => (

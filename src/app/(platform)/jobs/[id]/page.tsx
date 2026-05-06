@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { getCurrentSession } from '@/server-actions/auth.actions';
 import { getJobById } from '@/server-actions/job.actions';
 import {
-  Briefcase, Building2, Globe, Star, Eye, Calendar, ArrowLeft,
+  Building2, Globe, Star, Eye, Calendar, ArrowLeft,
   Pencil, MessageSquare, Tag, Users,
 } from 'lucide-react';
 import { PAYMENT_TYPES, INDUSTRIES, COMPANY_SIZES } from '@/lib/constants/industries';
@@ -40,7 +40,7 @@ export default async function JobDetailPage({ params }: Props) {
   const isOwner = job.ownerCompanyId === session.userId;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-medium">
       <Link
         href="/jobs"
         className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors"
@@ -49,12 +49,12 @@ export default async function JobDetailPage({ params }: Props) {
         Volver al catálogo
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
         {/* Main content (2/3) */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-5 sm:space-y-6 lg:space-y-8">
           {/* Header */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
-            <div className="flex items-start justify-between gap-4">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-8 lg:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
@@ -100,7 +100,7 @@ export default async function JobDetailPage({ params }: Props) {
           </div>
 
           {/* Long description */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h2 className="text-lg font-semibold text-white mb-4">Descripción</h2>
             <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
               {job.longDescription}
@@ -108,7 +108,7 @@ export default async function JobDetailPage({ params }: Props) {
           </div>
 
           {/* Technologies */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h2 className="text-lg font-semibold text-white mb-4">Tecnologías requeridas</h2>
             <div className="flex flex-wrap gap-2">
               {job.technologies.map((tech: string) => (
@@ -121,7 +121,7 @@ export default async function JobDetailPage({ params }: Props) {
 
           {/* Images gallery */}
           {job.images.length > 0 && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
               <h2 className="text-lg font-semibold text-white mb-4">Material adjunto</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {job.images.map((url: string, i: number) => (
@@ -135,9 +135,9 @@ export default async function JobDetailPage({ params }: Props) {
         </div>
 
         {/* Sidebar (1/3) */}
-        <div className="space-y-4">
+        <div className="space-y-5 sm:space-y-6">
           {/* Budget card */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h3 className="text-sm font-medium text-gray-400 mb-3">Presupuesto</h3>
             {job.budget !== null && job.paymentType ? (
               <div>
@@ -155,7 +155,7 @@ export default async function JobDetailPage({ params }: Props) {
             {!isOwner && session.role === 'DEVELOPER' && (
               <Link
                 href={`/messages?jobId=${job.id}`}
-                className="flex items-center justify-center gap-2 w-full mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-medium text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all"
+                className="flex items-center justify-center gap-2 w-full mt-6 px-5 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-medium text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all"
               >
                 <MessageSquare className="h-4 w-4" />
                 Postularse
@@ -165,7 +165,7 @@ export default async function JobDetailPage({ params }: Props) {
 
           {/* Company card */}
           {job.ownerCompany && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
               <h3 className="text-sm font-medium text-gray-400 mb-3">Empresa</h3>
               <Link
                 href={`/profile/${job.ownerCompany.id}`}

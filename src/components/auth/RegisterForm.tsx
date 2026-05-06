@@ -52,7 +52,7 @@ export function RegisterForm() {
 
   return (
     <div className="w-full max-w-lg">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md p-8 shadow-2xl relative">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md p-5 sm:p-6 lg:p-8 shadow-2xl relative">
         <AnimatePresence mode="wait">
           {selectedRole === null ? (
             <motion.div key="selector" variants={formVariants} initial="initial" animate="animate" exit="exit">
@@ -90,7 +90,7 @@ function RoleSelector({ onSelect }: { onSelect: (role: RoleSelection) => void })
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <button
           onClick={() => onSelect('DEVELOPER')}
-          className="group rounded-xl border border-white/5 bg-white/[0.02] p-6 text-left hover:bg-violet-600/5 hover:border-violet-500/20 transition-all duration-300"
+          className="group rounded-xl border border-white/5 bg-white/[0.02] p-5 text-left transition-all duration-300 hover:border-violet-500/20 hover:bg-violet-600/5 sm:p-6"
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/10 text-violet-400 mb-4 group-hover:bg-violet-600/20 transition-colors">
             <Code2 className="h-5 w-5" />
@@ -103,7 +103,7 @@ function RoleSelector({ onSelect }: { onSelect: (role: RoleSelection) => void })
 
         <button
           onClick={() => onSelect('COMPANY')}
-          className="group rounded-xl border border-white/5 bg-white/[0.02] p-6 text-left hover:bg-blue-600/5 hover:border-blue-500/20 transition-all duration-300"
+          className="group rounded-xl border border-white/5 bg-white/[0.02] p-5 text-left transition-all duration-300 hover:border-blue-500/20 hover:bg-blue-600/5 sm:p-6"
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400 mb-4 group-hover:bg-blue-600/20 transition-colors">
             <Building2 className="h-5 w-5" />

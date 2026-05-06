@@ -38,8 +38,8 @@ export function DeleteAccountSection() {
   };
 
   return (
-    <div className="rounded-2xl border border-red-500/10 bg-red-500/[0.02] p-6">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="rounded-2xl border border-red-500/10 bg-red-500/[0.02] p-5 sm:p-6 lg:p-8">
+      <div className="flex items-start sm:items-center gap-3 mb-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
           <Trash2 className="h-5 w-5 text-red-400" />
         </div>
@@ -88,7 +88,7 @@ export function DeleteAccountSection() {
               <p className="text-sm text-red-400">{serverError}</p>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 type="button"
                 variant="secondary"

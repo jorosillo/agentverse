@@ -109,9 +109,9 @@ export function EditAgentForm({ agent }: Props) {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
         {/* Basic info */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-5">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <Cpu className="h-5 w-5 text-violet-400" />
             Información del agente
@@ -138,7 +138,7 @@ export function EditAgentForm({ agent }: Props) {
             <textarea
               id="edit-agent-long"
               rows={8}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 hover:border-white/20 transition-all resize-none font-mono"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 hover:border-white/20 transition-all resize-none font-mono"
               {...register('longDescription')}
             />
             {errors.longDescription?.message && (
@@ -148,13 +148,13 @@ export function EditAgentForm({ agent }: Props) {
         </div>
 
         {/* Technologies */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-4">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <Code2 className="h-5 w-5 text-violet-400" />
             Tecnologías
           </h2>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               type="text"
               value={techInput}
@@ -210,7 +210,7 @@ export function EditAgentForm({ agent }: Props) {
         </div>
 
         {/* Pricing */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-5">
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-violet-400" />
             Precios
@@ -235,7 +235,7 @@ export function EditAgentForm({ agent }: Props) {
 
         {/* Images */}
         {imageUrls.length > 0 && (
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-4">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Upload className="h-5 w-5 text-violet-400" />
               Imágenes actuales
@@ -295,7 +295,7 @@ export function EditAgentForm({ agent }: Props) {
               Eliminar
             </Button>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button variant="secondary" size="sm" onClick={() => setShowDeleteConfirm(false)}>
                 Cancelar
               </Button>

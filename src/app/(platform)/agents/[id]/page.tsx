@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { getCurrentSession } from '@/server-actions/auth.actions';
 import { getAgentById } from '@/server-actions/agent.actions';
 import {
-  Cpu, MapPin, Star, Eye, Calendar, ArrowLeft, 
+  MapPin, Star, Eye, Calendar, ArrowLeft,
   Pencil, MessageSquare, Tag,
 } from 'lucide-react';
 import { PAYMENT_TYPES, EXPERIENCE_LEVELS } from '@/lib/constants/industries';
@@ -41,7 +41,7 @@ export default async function AgentDetailPage({ params }: Props) {
   const isOwner = agent.authorId === session.userId;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-medium">
       {/* Back link */}
       <Link
         href="/agents"
@@ -51,12 +51,12 @@ export default async function AgentDetailPage({ params }: Props) {
         Volver al catálogo
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
         {/* Main content (2/3) */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-5 sm:space-y-6 lg:space-y-8">
           {/* Header */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
-            <div className="flex items-start justify-between gap-4">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-8 lg:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex-1 min-w-0">
                 {/* Categories */}
                 {agent.categories.length > 0 && (
@@ -99,7 +99,7 @@ export default async function AgentDetailPage({ params }: Props) {
           </div>
 
           {/* Long description (Markdown) */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h2 className="text-lg font-semibold text-white mb-4">Descripción</h2>
             <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
               {agent.longDescription}
@@ -107,7 +107,7 @@ export default async function AgentDetailPage({ params }: Props) {
           </div>
 
           {/* Technologies */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h2 className="text-lg font-semibold text-white mb-4">Tecnologías</h2>
             <div className="flex flex-wrap gap-2">
               {agent.technologies.map((tech: string) => (
@@ -123,7 +123,7 @@ export default async function AgentDetailPage({ params }: Props) {
 
           {/* Images gallery */}
           {agent.images.length > 0 && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
               <h2 className="text-lg font-semibold text-white mb-4">Galería</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {agent.images.map((url: string, i: number) => (
@@ -141,9 +141,9 @@ export default async function AgentDetailPage({ params }: Props) {
         </div>
 
         {/* Sidebar (1/3) */}
-        <div className="space-y-4">
+        <div className="space-y-5 sm:space-y-6">
           {/* Pricing card */}
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
             <h3 className="text-sm font-medium text-gray-400 mb-3">Precio</h3>
             {agent.price !== null && agent.paymentType ? (
               <div>
@@ -161,7 +161,7 @@ export default async function AgentDetailPage({ params }: Props) {
             {!isOwner && (
               <Link
                 href={`/messages?agentId=${agent.id}`}
-                className="flex items-center justify-center gap-2 w-full mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-sm font-medium text-white shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40 transition-all"
+                className="flex items-center justify-center gap-2 w-full mt-6 px-5 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-sm font-medium text-white shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40 transition-all"
               >
                 <MessageSquare className="h-4 w-4" />
                 Contactar
@@ -171,7 +171,7 @@ export default async function AgentDetailPage({ params }: Props) {
 
           {/* Author card */}
           {agent.author && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
               <h3 className="text-sm font-medium text-gray-400 mb-3">Desarrollador</h3>
               <Link
                 href={`/profile/${agent.author.id}`}
@@ -209,7 +209,7 @@ export default async function AgentDetailPage({ params }: Props) {
           )}
 
           {!agent.author && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6">
               <h3 className="text-sm font-medium text-gray-400 mb-2">Desarrollador</h3>
               <p className="text-xs text-gray-600 italic">Información no disponible para tu rol</p>
             </div>

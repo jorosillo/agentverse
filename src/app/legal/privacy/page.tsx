@@ -13,17 +13,17 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-12">
+    <div className="page-shell-narrow">
       <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-8 transition-colors">
         <ArrowLeft className="h-3.5 w-3.5" />
         Volver al inicio
       </Link>
 
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-10">
-        <h1 className="text-3xl font-bold text-white mb-2">Política de Privacidad</h1>
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-8 lg:p-10">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Política de Privacidad</h1>
         <p className="text-sm text-gray-500 mb-8">Última actualización: 25 de abril de 2026</p>
 
-        <div className="prose prose-invert prose-sm max-w-none space-y-6 text-gray-300">
+        <div className="prose prose-invert prose-sm max-w-none space-y-7 text-gray-300">
           <section>
             <h2 className="text-lg font-semibold text-white">1. Responsable del Tratamiento</h2>
             <p>AgentVerse es responsable del tratamiento de los datos personales recogidos a través de la Plataforma, de conformidad con el Reglamento General de Protección de Datos (UE) 2016/679 (RGPD).</p>

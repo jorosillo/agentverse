@@ -35,7 +35,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             className={`
-              w-full appearance-none rounded-xl border bg-white/[0.03] px-4 py-2.5 pr-10
+              w-full appearance-none rounded-xl border bg-white/[0.03] px-4 py-3.5 pr-10
               text-sm text-white
               transition-all duration-200
               focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500

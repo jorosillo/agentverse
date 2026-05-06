@@ -7,16 +7,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Cookie, X } from 'lucide-react';
+import { Cookie } from 'lucide-react';
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem('cookie_consent');
-    if (!consent) {
-      setVisible(true);
-    }
+    const timer = window.setTimeout(() => {
+      const consent = localStorage.getItem('cookie_consent');
+      setVisible(!consent);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleAccept = () => {

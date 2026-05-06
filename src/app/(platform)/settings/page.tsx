@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   if (!user) redirect('/login');
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-narrow">
       <div className="flex items-center gap-3 mb-8">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/10">
           <Settings className="h-5 w-5 text-violet-400" />
@@ -32,7 +32,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6 lg:space-y-8">
         {/* Email preferences */}
         <EmailPreferencesToggle initialValue={user.emailPreferences} />
 

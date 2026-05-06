@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { AppNavbar } from "@/components/shared/AppNavbar";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -34,15 +28,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${inter.variable} h-full antialiased dark`}>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
-        {children}
+    <html lang="es" className="h-full antialiased dark">
+      <body className="min-h-full w-full flex flex-col overflow-x-hidden">
+        <AppNavbar />
+        <div className="flex min-h-screen w-full flex-1 flex-col pt-[var(--app-nav-height)]">
+          {children}
+        </div>
         <CookieConsent />
       </body>
     </html>

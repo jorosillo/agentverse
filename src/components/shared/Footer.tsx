@@ -9,8 +9,8 @@ import { Bot } from 'lucide-react';
 export function Footer() {
   return (
     <footer className="border-t border-white/5 bg-[#0a0a0f]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="section-shell py-8 sm:py-10 lg:py-12">
+        <div className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600">
@@ -22,7 +22,7 @@ export function Footer() {
           </div>
 
           {/* Enlaces legales */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-gray-500">
             <Link
               href="/legal/terms"
               className="hover:text-gray-300 transition-colors"

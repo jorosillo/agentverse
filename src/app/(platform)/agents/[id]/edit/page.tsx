@@ -33,7 +33,7 @@ export default async function EditAgentPage({ params }: Props) {
   if (result.data.authorId !== session.userId) redirect('/dashboard');
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-narrow">
       <Link
         href={`/agents/${id}`}
         className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors"

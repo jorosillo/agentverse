@@ -24,9 +24,9 @@ export function EmailPreferencesToggle({ initialValue }: Props) {
   };
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">
             {enabled ? (
               <Bell className="h-5 w-5 text-violet-400" />
@@ -48,7 +48,7 @@ export function EmailPreferencesToggle({ initialValue }: Props) {
         <button
           onClick={toggle}
           disabled={isPending}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${
+          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${
             enabled ? 'bg-violet-600' : 'bg-white/10'
           } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           aria-label="Toggle email notifications"

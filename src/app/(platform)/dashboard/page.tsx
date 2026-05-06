@@ -43,13 +43,13 @@ export default async function DashboardPage() {
       : user.companyProfile?.companyName || 'Empresa';
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell content-stack">
       {/* Onboarding modal */}
       {!user.onboardingCompleted && <OnboardingModal role={user.role} />}
 
       {/* Email verification banner */}
       {!user.isEmailVerified && (
-        <div className="mb-6 rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 flex items-start gap-3">
+        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 sm:p-5 flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-yellow-300">
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Welcome header */}
-      <div className="mb-8">
+      <div>
         <div className="flex items-center gap-3 mb-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/10">
             <LayoutDashboard className="h-5 w-5 text-violet-400" />
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
 
       {/* KPI Stats Grid */}
       {statsResult.success && (
-        <div className="mb-8">
+        <div>
           {user.role === 'DEVELOPER' ? (
             <DeveloperStats stats={statsResult.data as DeveloperDashboardStats} />
           ) : (
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
         {(user.role === 'DEVELOPER'
           ? [
               { href: '/agents', label: 'Mis Agentes', icon: Cpu, desc: 'Gestiona tus agentes publicados' },
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
           <Link
             key={link.href}
             href={link.href}
-            className="group rounded-2xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+            className="group rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/10 text-violet-400 mb-4 group-hover:bg-violet-600/15 transition-colors">
               <link.icon className="h-5 w-5" />
@@ -168,9 +168,9 @@ function StatCard({ icon: Icon, label, value, accent = false }: {
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${accent ? 'bg-violet-600/15 text-violet-400' : 'bg-white/5 text-gray-400'}`}>
+    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 hover:bg-white/[0.03] transition-colors">
+      <div className="flex items-center gap-4 mb-4">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${accent ? 'bg-violet-600/15 text-violet-400' : 'bg-white/5 text-gray-400'}`}>
           <Icon className="h-4 w-4" />
         </div>
         <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
@@ -182,7 +182,7 @@ function StatCard({ icon: Icon, label, value, accent = false }: {
 
 function DeveloperStats({ stats }: { stats: DeveloperDashboardStats }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
       <StatCard icon={Cpu} label="Agentes" value={stats.agentsCount} accent />
       <StatCard icon={Eye} label="Visualizaciones" value={stats.totalViews} />
       <StatCard icon={HandshakeIcon} label="Acuerdos" value={stats.acceptedDeals} />
@@ -194,7 +194,7 @@ function DeveloperStats({ stats }: { stats: DeveloperDashboardStats }) {
 
 function CompanyStats({ stats }: { stats: CompanyDashboardStats }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
       <StatCard icon={Briefcase} label="Ofertas" value={stats.jobsCount} accent />
       <StatCard icon={Eye} label="Visualizaciones" value={stats.totalViews} />
       <StatCard icon={Users} label="Contratados" value={stats.agentsHired} />
@@ -217,7 +217,7 @@ function RecentItemsList({ role, items }: {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center sm:p-8 lg:p-10">
         <p className="text-sm text-gray-500">
           {role === 'DEVELOPER'
             ? 'Aún no has publicado agentes. ¡Publica tu primer agente!'
@@ -236,7 +236,7 @@ function RecentItemsList({ role, items }: {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold text-white">{title}</h2>
         <Link
           href={basePath}
@@ -246,12 +246,12 @@ function RecentItemsList({ role, items }: {
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-4">
         {items.map((item) => (
           <Link
             key={item.id}
             href={`${basePath}/${item.id}`}
-            className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all group"
+            className="group flex flex-col gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5 transition-all hover:border-white/10 hover:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between sm:p-6"
           >
             <div className="min-w-0">
               <h3 className="text-sm font-medium text-white truncate group-hover:text-violet-300 transition-colors">
@@ -261,7 +261,7 @@ function RecentItemsList({ role, items }: {
                 {item.shortDescription}
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+            <div className="flex flex-shrink-0 items-center gap-2 sm:ml-4">
               <span className="flex items-center gap-1 text-xs text-gray-500">
                 <Eye className="h-3 w-3" />
                 {item.viewCount}

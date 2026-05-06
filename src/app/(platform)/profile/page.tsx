@@ -19,7 +19,7 @@ export default async function ProfilePage() {
   if (!user) redirect('/login');
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="page-shell-narrow">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Editar perfil</h1>
         <p className="text-sm text-gray-400 mt-1">
@@ -28,7 +28,7 @@ export default async function ProfilePage() {
       </div>
 
       {/* Email / Role (readonly info) */}
-      <div className="mb-6 rounded-xl border border-white/5 bg-white/[0.02] p-5">
+      <div className="mb-8 rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <span className="text-xs text-gray-500 uppercase tracking-wider">Correo electrónico</span>

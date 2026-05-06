@@ -121,7 +121,7 @@ function VerifyCard({
 }) {
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm p-8 shadow-2xl text-center">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm p-5 sm:p-6 lg:p-8 shadow-2xl text-center">
         <div
           className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconBg} mx-auto mb-5`}
         >

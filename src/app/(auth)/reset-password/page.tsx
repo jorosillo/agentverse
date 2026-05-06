@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 function ResetPasswordSkeleton() {
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm p-8 shadow-2xl flex items-center justify-center min-h-[300px]">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm p-5 sm:p-6 lg:p-8 shadow-2xl flex items-center justify-center min-h-[300px]">
         <Loader2 className="h-8 w-8 text-violet-400 animate-spin" />
       </div>
     </div>

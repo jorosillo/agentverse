@@ -14,7 +14,7 @@ import { verifyToken, SESSION_COOKIE_NAME } from '@/infrastructure/services/auth
 // CONFIGURACIÓN DE RUTAS
 // ============================================================================
 
-const PUBLIC_ROUTES = ['/', '/terms', '/privacy', '/cookies'];
+const PUBLIC_ROUTES = ['/', '/legal/terms', '/legal/privacy', '/legal/cookies'];
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
 const CRON_ROUTES = ['/api/cron'];
 
