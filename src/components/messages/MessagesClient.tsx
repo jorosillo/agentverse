@@ -166,7 +166,7 @@ export function MessagesClient({ conversations, currentUserId, currentRole, init
         initialMessage: newMessage,
       });
 
-      if (result.success && result.data) {
+      if (result.success) {
         setNewMessage('');
         setIsDrafting(false);
         setActiveConvId(result.data.conversationId);
