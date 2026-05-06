@@ -8,10 +8,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  MessageSquare, Send, Cpu, Briefcase, Clock, CheckCircle2,
-  DollarSign, AlertTriangle, ArrowLeft,
+  MessageSquare, Send, Cpu, Briefcase, CheckCircle2,
+  DollarSign, AlertTriangle, ArrowLeft, PlusCircle
 } from 'lucide-react';
-import { getMessages, sendMessage, acceptProposal, updateConversationStatus } from '@/server-actions/conversation.actions';
+import { getMessages, sendMessage, acceptProposal, updateConversationStatus, startConversation } from '@/server-actions/conversation.actions';
 import { Button } from '@/components/ui/Button';
 
 // ============================================================================
@@ -52,10 +52,20 @@ interface MessageItem {
   };
 }
 
+interface DraftConversation {
+  recipientId: string;
+  recipientName: string;
+  resourceId: string;
+  resourceType: 'agent' | 'job';
+  resourceName: string;
+}
+
 interface Props {
   conversations: ConversationItem[];
   currentUserId: string;
   currentRole: string;
+  initialActiveConvId?: string;
+  draftConversation?: DraftConversation | null;
 }
 
 // ============================================================================
@@ -96,15 +106,16 @@ function timeAgo(dateStr: Date | string): string {
 // MAIN COMPONENT
 // ============================================================================
 
-export function MessagesClient({ conversations, currentUserId, currentRole }: Props) {
-  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+export function MessagesClient({ conversations, currentUserId, currentRole, initialActiveConvId, draftConversation }: Props) {
+  const [activeConvId, setActiveConvId] = useState<string | null>(initialActiveConvId || null);
+  const [isDrafting, setIsDrafting] = useState<boolean>(!!draftConversation && !initialActiveConvId);
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [acceptPrice, setAcceptPrice] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [showMobileChat, setShowMobileChat] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(!!initialActiveConvId || !!draftConversation);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -121,18 +132,19 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
   }, []);
 
   // Select conversation
-  const selectConversation = (convId: string) => {
+  const selectConversation = (convId: string | null) => {
     setActiveConvId(convId);
+    if (convId) setIsDrafting(false);
     setShowMobileChat(true);
-    loadMessages(convId);
+    if (convId) loadMessages(convId);
   };
 
   // Poll for new messages every 5s
   useEffect(() => {
-    if (!activeConvId) return;
+    if (!activeConvId || isDrafting) return;
     const interval = setInterval(() => loadMessages(activeConvId), 5000);
     return () => clearInterval(interval);
-  }, [activeConvId, loadMessages]);
+  }, [activeConvId, isDrafting, loadMessages]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -141,14 +153,41 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
 
   // Send message
   const handleSend = async () => {
-    if (!newMessage.trim() || !activeConvId) return;
+    if (!newMessage.trim()) return;
+    if (!activeConvId && !isDrafting) return;
+
     setSending(true);
-    const result = await sendMessage({ conversationId: activeConvId, content: newMessage });
-    if (result.success) {
-      setNewMessage('');
-      await loadMessages(activeConvId);
-      router.refresh();
+
+    if (isDrafting && draftConversation) {
+      const result = await startConversation({
+        recipientId: draftConversation.recipientId,
+        agentId: draftConversation.resourceType === 'agent' ? draftConversation.resourceId : undefined,
+        jobId: draftConversation.resourceType === 'job' ? draftConversation.resourceId : undefined,
+        initialMessage: newMessage,
+      });
+
+      if (result.success && result.data) {
+        setNewMessage('');
+        setIsDrafting(false);
+        setActiveConvId(result.data.conversationId);
+        await loadMessages(result.data.conversationId);
+        // Remove query params from url without refreshing
+        window.history.replaceState(null, '', '/messages');
+        router.refresh();
+      } else {
+        alert(result.error || 'Error al iniciar la conversación');
+      }
+    } else if (activeConvId) {
+      const result = await sendMessage({ conversationId: activeConvId, content: newMessage });
+      if (result.success) {
+        setNewMessage('');
+        await loadMessages(activeConvId);
+        router.refresh();
+      } else {
+        alert(result.error || 'Error al enviar el mensaje');
+      }
     }
+    
     setSending(false);
   };
 
@@ -181,9 +220,9 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
   // EMPTY STATE
   // ============================================================================
 
-  if (conversations.length === 0) {
+  if (conversations.length === 0 && !draftConversation) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/10 p-12 text-center">
+      <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center sm:p-8 lg:p-12">
         <MessageSquare className="h-10 w-10 text-gray-600 mx-auto mb-4" />
         <p className="text-sm text-gray-500 mb-2">No tienes conversaciones</p>
         <p className="text-xs text-gray-600">Contacta con un agente o postúlate a una oferta para empezar</p>
@@ -191,18 +230,20 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
     );
   }
 
+  const hasActiveChat = activeConv !== undefined || isDrafting;
+
   // ============================================================================
   // RENDER
   // ============================================================================
 
   return (
-    <div className="flex rounded-2xl border border-white/5 bg-white/[0.01] overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+    <div className="flex h-[calc(100svh_-_var(--app-nav-height)_-_8.5rem)] min-h-[26rem] max-h-[44rem] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.01] shadow-2xl sm:rounded-3xl">
       {/* Left sidebar — Conversation list */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-white/5 flex flex-col ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
-        <div className="px-4 py-3 border-b border-white/5">
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Conversaciones ({conversations.length})</p>
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/5 bg-white/[0.02]">
+          <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest">Conversaciones ({conversations.length})</p>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2 sm:space-y-3">
           {conversations.map((conv) => {
             const other = getOtherParticipant(conv, currentUserId);
             const statusBadge = getStatusBadge(conv.status);
@@ -213,8 +254,15 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
               <button
                 key={conv.id}
                 onClick={() => selectConversation(conv.id)}
-                className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-all ${isActive ? 'bg-white/[0.05] border-l-2 border-l-violet-500' : ''}`}
+                className={`w-full text-left px-4 sm:px-5 py-4 sm:py-5 rounded-2xl transition-all relative group ${
+                  isActive 
+                    ? 'bg-violet-600/10 border border-violet-500/30' 
+                    : 'hover:bg-white/[0.04] border border-transparent'
+                }`}
               >
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-violet-500 rounded-r-full" />
+                )}
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600/10 text-xs font-bold text-violet-400 flex-shrink-0">
                     {getParticipantName(other).charAt(0)}
@@ -225,7 +273,7 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
                       {lastMsg && <span className="text-[10px] text-gray-600 flex-shrink-0">{timeAgo(lastMsg.createdAt)}</span>}
                     </div>
                     {(conv.agent || conv.job) && (
-                      <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                      <p className="mt-0.5 flex items-center gap-1 truncate text-[10px] text-gray-500">
                         {conv.agent ? <><Cpu className="h-2.5 w-2.5" />{conv.agent.name}</> : <><Briefcase className="h-2.5 w-2.5" />{conv.job?.name}</>}
                       </p>
                     )}
@@ -236,88 +284,146 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
               </button>
             );
           })}
+          {draftConversation && (
+            <button
+              onClick={() => { setIsDrafting(true); setActiveConvId(null); setShowMobileChat(true); }}
+              className={`w-full text-left px-4 sm:px-5 py-4 sm:py-5 rounded-2xl transition-all relative group ${
+                isDrafting 
+                  ? 'bg-violet-600/10 border border-violet-500/30' 
+                  : 'hover:bg-white/[0.04] border border-transparent'
+              }`}
+            >
+              {isDrafting && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-violet-500 rounded-r-full" />
+              )}
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600/10 text-xs font-bold text-violet-400 flex-shrink-0">
+                  <PlusCircle className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-white truncate">Nuevo Chat</p>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mt-1">Acerca de: {draftConversation.resourceName}</p>
+                </div>
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Right panel — Active chat */}
       <div className={`flex-1 flex flex-col ${!showMobileChat ? 'hidden md:flex' : 'flex'}`}>
-        {!activeConv ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <MessageSquare className="h-8 w-8 text-gray-700 mx-auto mb-3" />
-              <p className="text-sm text-gray-600">Selecciona una conversación</p>
+        {!hasActiveChat ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 lg:p-12 text-center">
+            <div className="h-20 w-20 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-6">
+              <MessageSquare className="h-10 w-10 text-gray-700" />
             </div>
+            <h3 className="text-xl font-semibold text-white mb-2">Selecciona un chat</h3>
+            <p className="text-sm text-gray-500 max-w-[260px] leading-relaxed">
+              Elige una conversación de la izquierda para empezar a hablar con desarrolladores o empresas especializadas.
+            </p>
           </div>
         ) : (
           <>
             {/* Chat header */}
-            <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3">
-              <button onClick={() => setShowMobileChat(false)} className="md:hidden text-gray-400 hover:text-white">
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600/10 text-xs font-bold text-violet-400">
-                {getParticipantName(getOtherParticipant(activeConv, currentUserId)).charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {getParticipantName(getOtherParticipant(activeConv, currentUserId))}
-                </p>
-                {(activeConv.agent || activeConv.job) && (
-                  <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                    {activeConv.agent ? <><Cpu className="h-2.5 w-2.5" />{activeConv.agent.name}</> : <><Briefcase className="h-2.5 w-2.5" />{activeConv.job?.name}</>}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/5 flex items-center justify-between gap-3 sm:gap-4 bg-white/[0.01]">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <button onClick={() => setShowMobileChat(false)} className="md:hidden text-gray-400 hover:text-white">
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/10 text-sm font-bold text-violet-400">
+                  {isDrafting 
+                    ? draftConversation?.recipientName.charAt(0) 
+                    : activeConv && getParticipantName(getOtherParticipant(activeConv, currentUserId)).charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-semibold text-white truncate">
+                    {isDrafting 
+                      ? draftConversation?.recipientName 
+                      : activeConv && getParticipantName(getOtherParticipant(activeConv, currentUserId))}
                   </p>
-                )}
+                  {(isDrafting || activeConv?.agent || activeConv?.job) && (
+                    <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-gray-500">
+                      {isDrafting ? (
+                        draftConversation?.resourceType === 'agent' 
+                          ? <><Cpu className="h-3 w-3" />{draftConversation.resourceName}</> 
+                          : <><Briefcase className="h-3 w-3" />{draftConversation?.resourceName}</>
+                      ) : (
+                        activeConv?.agent 
+                          ? <><Cpu className="h-3 w-3" />{activeConv.agent.name}</> 
+                          : <><Briefcase className="h-3 w-3" />{activeConv?.job?.name}</>
+                      )}
+                    </p>
+                  )}
+                </div>
               </div>
-              <span className={`px-2 py-0.5 text-[10px] rounded-full border ${getStatusBadge(activeConv.status).cls}`}>
-                {getStatusBadge(activeConv.status).label}
-              </span>
+              {!isDrafting && activeConv && (
+                <span className={`shrink-0 px-3 py-1 text-[11px] font-medium rounded-full border shadow-sm ${getStatusBadge(activeConv.status).cls}`}>
+                  {getStatusBadge(activeConv.status).label}
+                </span>
+              )}
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-              {loading && messages.length === 0 && (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-5 w-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
-                </div>
-              )}
-
-              {messages.map((msg) => {
-                const isOwn = msg.senderId === currentUserId;
-                const senderName = msg.sender.developerProfile?.fullName || msg.sender.companyProfile?.companyName || 'Sistema';
-
-                if (msg.isSystemMessage) {
-                  return (
-                    <div key={msg.id} className="flex justify-center">
-                      <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/5 text-[11px] text-gray-500 max-w-sm text-center">
-                        {msg.content}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                      isOwn
-                        ? 'bg-violet-600/20 border border-violet-500/30 rounded-br-md'
-                        : 'bg-white/[0.04] border border-white/5 rounded-bl-md'
-                    }`}>
-                      {!isOwn && <p className="text-[10px] text-gray-500 mb-1">{senderName}</p>}
-                      <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">{msg.content}</p>
-                      <p className="text-[9px] text-gray-600 mt-1 text-right">{timeAgo(msg.createdAt)}</p>
-                    </div>
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-8 space-y-4 sm:space-y-6">
+              {isDrafting ? (
+                <div className="flex-1 flex flex-col items-center justify-center h-full text-center py-12">
+                  <div className="h-16 w-16 rounded-3xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center mb-4">
+                    <MessageSquare className="h-8 w-8 text-violet-400" />
                   </div>
-                );
-              })}
+                  <h3 className="text-lg font-semibold text-white mb-2">Inicia la conversación</h3>
+                  <p className="text-sm text-gray-500 max-w-[280px] leading-relaxed">
+                    Escribe tu primer mensaje para empezar a hablar con {draftConversation?.recipientName} sobre {draftConversation?.resourceName}.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {loading && messages.length === 0 && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="h-5 w-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
+                    </div>
+                  )}
+
+                  {messages.map((msg) => {
+                    const isOwn = msg.senderId === currentUserId;
+                    const senderName = msg.sender.developerProfile?.fullName || msg.sender.companyProfile?.companyName || 'Sistema';
+
+                    if (msg.isSystemMessage) {
+                      return (
+                        <div key={msg.id} className="flex justify-center">
+                          <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/5 text-[11px] text-gray-500 max-w-sm text-center">
+                            {msg.content}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[min(85%,42rem)] rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 ${
+                          isOwn
+                            ? 'bg-violet-600/20 border border-violet-500/30 rounded-br-md shadow-lg shadow-violet-900/10'
+                            : 'bg-white/[0.04] border border-white/5 rounded-bl-md shadow-sm'
+                        }`}>
+                          {!isOwn && <p className="text-xs font-medium text-violet-400/80 mb-1.5">{senderName}</p>}
+                          <p className="text-[15px] leading-relaxed text-gray-200 whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p className="text-[10px] text-gray-600 mt-2 text-right font-medium">{timeAgo(msg.createdAt)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
               <div ref={chatEndRef} />
             </div>
 
             {/* Action bar (state machine) */}
-            {activeConv.status !== 'COMPLETED' && activeConv.status !== 'ISSUE_REPORTED' && (
-              <div className="px-4 py-2 border-t border-white/5 bg-white/[0.01]">
+            {!isDrafting && activeConv && activeConv.status !== 'COMPLETED' && activeConv.status !== 'ISSUE_REPORTED' && (
+              <div className="px-4 py-3 border-t border-white/5 bg-white/[0.01]">
                 {/* PENDING: Company can accept */}
                 {activeConv.status === 'PENDING' && currentRole === 'COMPANY' && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <DollarSign className="h-4 w-4 text-green-400 flex-shrink-0" />
                     <input
                       type="number"
@@ -360,7 +466,7 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
             )}
 
             {/* Completed banner */}
-            {activeConv.status === 'COMPLETED' && (
+            {!isDrafting && activeConv && activeConv.status === 'COMPLETED' && (
               <div className="px-4 py-2 border-t border-green-500/10 bg-green-500/[0.03] text-center">
                 <p className="text-xs text-green-400 flex items-center justify-center gap-1">
                   <CheckCircle2 className="h-3.5 w-3.5" />
@@ -370,7 +476,7 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
             )}
 
             {/* Message input */}
-            {activeConv.status !== 'COMPLETED' && activeConv.status !== 'ISSUE_REPORTED' && (
+            {(isDrafting || (activeConv && activeConv.status !== 'COMPLETED' && activeConv.status !== 'ISSUE_REPORTED')) && (
               <div className="px-4 py-3 border-t border-white/5">
                 <div className="flex items-center gap-2">
                   <input
@@ -378,17 +484,20 @@ export function MessagesClient({ conversations, currentUserId, currentRole }: Pr
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder="Escribe un mensaje..."
+                    placeholder={isDrafting ? "Escribe un primer mensaje detallado (mín. 10 caracteres)..." : "Escribe un mensaje..."}
                     className="flex-1 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
                   />
                   <button
                     onClick={handleSend}
-                    disabled={sending || !newMessage.trim()}
+                    disabled={sending || !newMessage.trim() || (isDrafting && newMessage.length < 10)}
                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     <Send className="h-4 w-4" />
                   </button>
                 </div>
+                {isDrafting && newMessage.length > 0 && newMessage.length < 10 && (
+                  <p className="mt-2 text-[10px] text-red-400 px-1">El primer mensaje debe tener al menos 10 caracteres.</p>
+                )}
               </div>
             )}
           </>
