@@ -29,9 +29,9 @@ export default async function AgentsCatalogPage({ searchParams }: Props) {
 
   const params = await searchParams;
   const page = Number(params.page) || 1;
-  const search = typeof params.search === 'string' ? params.search : undefined;
-  const paymentType = typeof params.paymentType === 'string' ? params.paymentType : undefined;
-  const sortBy = typeof params.sortBy === 'string' ? params.sortBy : 'recent';
+  const search = typeof params.search === 'string' && params.search.trim() !== '' ? params.search : undefined;
+  const paymentType = typeof params.paymentType === 'string' && params.paymentType !== '' ? params.paymentType : undefined;
+  const sortBy = typeof params.sortBy === 'string' && params.sortBy !== '' ? params.sortBy : 'recent';
 
   const result = await getAgents({
     page,
