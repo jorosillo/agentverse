@@ -59,7 +59,7 @@ export function AppNavbarClient({ session }: AppNavbarClientProps) {
             onClick={closeMobile}
             className="group flex min-w-0 items-center gap-2.5"
           >
-            <div className="ml-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-600/20 transition-shadow group-hover:shadow-violet-600/40">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-600/20 transition-shadow group-hover:shadow-violet-600/40">
               <Bot className="h-5 w-5 text-white" />
             </div>
             <span className="truncate text-lg font-bold tracking-tight text-white">
@@ -127,7 +127,7 @@ export function AppNavbarClient({ session }: AppNavbarClientProps) {
                     Iniciar sesión
                   </Button>
                 </Link>
-                <Link href="/register" className="mr-6">
+                <Link href="/register">
                   <Button variant="primary" size="md">
                     Registrarse
                   </Button>
