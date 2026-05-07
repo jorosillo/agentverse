@@ -7,6 +7,7 @@
 import { jobRepository } from '@/infrastructure/repositories/job.repository';
 import { jobFiltersSchema, type JobFiltersInput } from '@/lib/schemas/job.schema';
 import { sanitizeJobForRole, sanitizeJobsForRole, canFilterByPrice } from '@/lib/utils/anti-scraping';
+import { shouldIncrementView } from '@/lib/utils/view-tracker';
 import type { SessionUser } from '@/lib/types';
 
 export async function getJobByIdUseCase(
@@ -18,8 +19,11 @@ export async function getJobByIdUseCase(
     return { success: false as const, error: 'Oferta no encontrada.' };
   }
 
-  // Incrementar vistas (fire-and-forget)
-  jobRepository.incrementViews(jobId).catch(() => {});
+  // Incrementar vistas (solo si no fue vista recientemente por el mismo usuario)
+  const viewKey = `job_${jobId}_user_${session.userId}`;
+  if (shouldIncrementView(viewKey)) {
+    jobRepository.incrementViews(jobId).catch(() => {});
+  }
 
   const sanitized = sanitizeJobForRole(job, {
     userRole: session.role,

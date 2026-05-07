@@ -9,6 +9,7 @@
 import { agentRepository } from '@/infrastructure/repositories/agent.repository';
 import { agentFiltersSchema, type AgentFiltersInput } from '@/lib/schemas/agent.schema';
 import { sanitizeAgentForRole, sanitizeAgentsForRole, canFilterByPrice } from '@/lib/utils/anti-scraping';
+import { shouldIncrementView } from '@/lib/utils/view-tracker';
 import type { SessionUser } from '@/lib/types';
 
 export async function getAgentByIdUseCase(
@@ -20,8 +21,11 @@ export async function getAgentByIdUseCase(
     return { success: false as const, error: 'Agente no encontrado.' };
   }
 
-  // Incrementar vistas (no bloquear)
-  agentRepository.incrementViews(agentId).catch(() => {});
+  // Incrementar vistas (solo si no fue vista recientemente por el mismo usuario)
+  const viewKey = `agent_${agentId}_user_${session.userId}`;
+  if (shouldIncrementView(viewKey)) {
+    agentRepository.incrementViews(agentId).catch(() => {});
+  }
 
   // Anti-scraping
   const sanitized = sanitizeAgentForRole(agent, {
