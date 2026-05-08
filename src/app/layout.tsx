@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "AgentVerse" }],
   icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
   openGraph: {
     title: "AgentVerse — El Marketplace para Agentes de IA",
