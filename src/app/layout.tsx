@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     "B2B",
   ],
   authors: [{ name: "AgentVerse" }],
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
   openGraph: {
     title: "AgentVerse — El Marketplace para Agentes de IA",
     description:
