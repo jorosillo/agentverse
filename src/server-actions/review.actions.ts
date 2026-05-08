@@ -8,7 +8,6 @@ import { getSessionUseCase } from '@/use-cases/auth/get-session.use-case';
 import { createReviewUseCase } from '@/use-cases/reviews/create-review.use-case';
 import { reportUserUseCase, blockUserUseCase, unblockUserUseCase } from '@/use-cases/moderation/moderation.use-case';
 import { reviewRepository } from '@/infrastructure/repositories/review.repository';
-import { moderationRepository } from '@/infrastructure/repositories/moderation.repository';
 import type { CreateReviewInput } from '@/lib/schemas/review.schema';
 import type { ReportCategory } from '@prisma/client';
 import type { ActionResult } from '@/lib/types';
@@ -104,13 +103,6 @@ export async function unblockUser(blockedId: string): Promise<ActionResult> {
 // ============================================================================
 // REPUTACIÓN
 // ============================================================================
-
-export async function recalculateReputation(userId: string): Promise<ActionResult<{ score: number }>> {
-  try {
-    await requireSession();
-    const score = await moderationRepository.recalculateReputation(userId);
-    return { success: true, data: { score } };
-  } catch {
-    return { success: false, error: 'Error al recalcular la reputación.' };
-  }
-}
+// La reputación se recalcula internamente via el script compute-reputation.ts
+// (cron job) o tras crear una review. No se expone como server action pública
+// para evitar que cualquier usuario autenticado manipule scores ajenos.

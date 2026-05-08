@@ -8,6 +8,7 @@
  * - certify (Company): PENDING_CERTIFICATION → COMPLETED
  */
 import { conversationRepository } from '@/infrastructure/repositories/conversation.repository';
+import { sendAgreementNotification } from '@/infrastructure/services/email.service';
 import { messageRepository } from '@/infrastructure/repositories/message.repository';
 import { acceptProposalSchema, updateConversationStatusSchema } from '@/lib/schemas/message.schema';
 import type { AcceptProposalInput, UpdateConversationStatusInput } from '@/lib/schemas/message.schema';
@@ -56,6 +57,23 @@ export async function acceptProposalUseCase(
     content: `💰 Propuesta aceptada. Importe acordado: ${parsed.data.agreedPrice.toLocaleString('es-ES')}€. El acuerdo está en progreso.`,
     isSystemMessage: true,
   });
+
+  // Notificación por email (best-effort, no bloquea la acción)
+  try {
+    const recipient = session.userId === conversation.participantAId ? conversation.participantB : conversation.participantA;
+    if (recipient.emailPreferences && recipient.email) {
+      const recipientName = recipient.developerProfile?.fullName || recipient.companyProfile?.companyName || 'Usuario';
+      await sendAgreementNotification(
+        recipient.email,
+        recipientName,
+        '¡Propuesta aceptada!',
+        `La empresa ha aceptado tu propuesta por un valor de ${parsed.data.agreedPrice}€. El trabajo ha comenzado oficialmente.`,
+        input.conversationId
+      );
+    }
+  } catch (e) {
+    console.error('[EMAIL] Error enviando notificación de acuerdo:', e);
+  }
 
   return { success: true, data: undefined };
 }
@@ -129,6 +147,30 @@ export async function updateConversationStatusUseCase(
       content: '⚠️ Se ha reportado un problema con este acuerdo.',
       isSystemMessage: true,
     });
+  }
+
+  // Notificación por email (best-effort, no bloquea la acción)
+  try {
+    const recipient = session.userId === conversation.participantAId ? conversation.participantB : conversation.participantA;
+    if (recipient.emailPreferences && recipient.email) {
+      let subject = '';
+      let messageBody = '';
+      
+      if (action === 'complete') {
+        subject = '¡Acuerdo listo para certificar!';
+        messageBody = `La otra parte ha marcado el acuerdo como listo. Por favor, revísalo y certifícalo para finalizar el proceso.`;
+      } else if (action === 'certify') {
+        subject = '¡Acuerdo completado con éxito!';
+        messageBody = `El acuerdo ha sido finalizado y certificado. Ya puedes dejar una valoración sobre tu experiencia en el chat.`;
+      }
+      
+      if (subject) {
+        const recipientName = recipient.developerProfile?.fullName || recipient.companyProfile?.companyName || 'Usuario';
+        await sendAgreementNotification(recipient.email, recipientName, subject, messageBody, parsed.data.conversationId);
+      }
+    }
+  } catch (e) {
+    console.error('[EMAIL] Error enviando notificación de estado:', e);
   }
 
   return { success: true, data: undefined };

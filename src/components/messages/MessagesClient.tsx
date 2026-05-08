@@ -12,7 +12,9 @@ import {
   DollarSign, AlertTriangle, ArrowLeft, PlusCircle
 } from 'lucide-react';
 import { getMessages, sendMessage, acceptProposal, updateConversationStatus, startConversation } from '@/server-actions/conversation.actions';
+import { createReview, hasUserReviewed } from '@/server-actions/review.actions';
 import { Button } from '@/components/ui/Button';
+import { Star } from 'lucide-react';
 
 // ============================================================================
 // TYPES
@@ -116,6 +118,17 @@ export function MessagesClient({ conversations, currentUserId, currentRole, init
   const [acceptPrice, setAcceptPrice] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(!!initialActiveConvId || !!draftConversation);
+  
+  // Review state
+  const [hasReviewedState, setHasReviewedState] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewData, setReviewData] = useState({
+    professional: 5,
+    fulfillment: 5,
+    communication: 5,
+    comment: '',
+  });
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -132,11 +145,20 @@ export function MessagesClient({ conversations, currentUserId, currentRole, init
   }, []);
 
   // Select conversation
-  const selectConversation = (convId: string | null) => {
+  const selectConversation = async (convId: string | null) => {
     setActiveConvId(convId);
-    if (convId) setIsDrafting(false);
-    setShowMobileChat(true);
-    if (convId) loadMessages(convId);
+    if (convId) {
+      setIsDrafting(false);
+      setShowMobileChat(true);
+      loadMessages(convId);
+      
+      // Check if already reviewed
+      const reviewed = await hasUserReviewed(convId);
+      setHasReviewedState(reviewed);
+      setShowReviewForm(false); // Reset form visibility
+    } else {
+      setShowMobileChat(true);
+    }
   };
 
   // Poll for new messages every 5s
@@ -212,6 +234,29 @@ export function MessagesClient({ conversations, currentUserId, currentRole, init
     if (result.success) {
       await loadMessages(activeConvId);
       router.refresh();
+    }
+    setActionLoading(false);
+  };
+
+  // Submit review
+  const handleSubmitReview = async () => {
+    if (!activeConvId) return;
+    setActionLoading(true);
+    const result = await createReview({
+      conversationId: activeConvId,
+      professionalRating: reviewData.professional,
+      fulfillmentRating: reviewData.fulfillment,
+      communicationRating: reviewData.communication,
+      comment: reviewData.comment,
+    });
+    
+    if (result.success) {
+      setHasReviewedState(true);
+      setShowReviewForm(false);
+      await loadMessages(activeConvId);
+      router.refresh();
+    } else {
+      alert(result.error || 'Error al enviar la valoración');
     }
     setActionLoading(false);
   };
@@ -465,13 +510,96 @@ export function MessagesClient({ conversations, currentUserId, currentRole, init
               </div>
             )}
 
-            {/* Completed banner */}
+            {/* Completed banner & Review trigger */}
             {!isDrafting && activeConv && activeConv.status === 'COMPLETED' && (
-              <div className="px-4 py-2 border-t border-green-500/10 bg-green-500/[0.03] text-center">
-                <p className="text-xs text-green-400 flex items-center justify-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Acuerdo completado{activeConv.agreedPrice && ` — ${activeConv.agreedPrice.toLocaleString('es-ES')}€`}
-                </p>
+              <div className="flex flex-col border-t border-green-500/10">
+                <div className="px-4 py-3 bg-green-500/[0.03] text-center">
+                  <p className="text-xs text-green-400 flex items-center justify-center gap-1.5 font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Acuerdo completado{activeConv.agreedPrice && ` — ${activeConv.agreedPrice.toLocaleString('es-ES')}€`}
+                  </p>
+                  {!hasReviewedState && !showReviewForm && (
+                    <button 
+                      onClick={() => setShowReviewForm(true)}
+                      className="mt-2 text-xs text-violet-400 hover:text-violet-300 underline underline-offset-4 transition-colors"
+                    >
+                      Dejar una valoración sobre este acuerdo
+                    </button>
+                  )}
+                </div>
+
+                {/* Review Form */}
+                {showReviewForm && (
+                  <div className="px-4 py-6 bg-white/[0.02] border-t border-white/5">
+                    <h4 className="text-sm font-semibold text-white mb-4 text-center">Valora tu experiencia</h4>
+                    
+                    <div className="space-y-5 max-w-sm mx-auto">
+                      {[
+                        { key: 'professional', label: 'Profesionalidad' },
+                        { key: 'fulfillment', label: 'Cumplimiento' },
+                        { key: 'communication', label: 'Comunicación' },
+                      ].map((attr) => (
+                        <div key={attr.key} className="flex items-center justify-between gap-4">
+                          <span className="text-xs text-gray-400">{attr.label}</span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => setReviewData({ ...reviewData, [attr.key]: star })}
+                                className="transition-transform active:scale-110"
+                              >
+                                <Star 
+                                  className={`h-4 w-4 ${
+                                    star <= (reviewData as any)[attr.key] 
+                                      ? 'text-yellow-400 fill-yellow-400' 
+                                      : 'text-gray-600'
+                                  }`} 
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="mt-4">
+                        <textarea
+                          value={reviewData.comment}
+                          onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                          placeholder="Cuéntanos más sobre el trabajo realizado (opcional)..."
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-white/10 bg-white/[0.03] text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 min-h-[5rem] resize-none"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="flex-1 text-[11px]" 
+                          onClick={() => setShowReviewForm(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1 text-[11px]" 
+                          onClick={handleSubmitReview}
+                          isLoading={actionLoading}
+                        >
+                          Enviar valoración
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {hasReviewedState && (
+                  <div className="px-4 py-2 bg-violet-600/5 text-center border-t border-violet-500/10">
+                    <p className="text-[10px] text-violet-400 flex items-center justify-center gap-1">
+                      <Star className="h-3 w-3 fill-violet-400" />
+                      Ya has valorado este acuerdo. ¡Gracias!
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

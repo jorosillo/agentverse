@@ -246,6 +246,21 @@ export const profileRepository = {
             description: true,
           },
         },
+        reviewsReceived: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: {
+            reviewer: {
+              select: {
+                id: true,
+                role: true,
+                avatarUrl: true,
+                developerProfile: { select: { fullName: true } },
+                companyProfile: { select: { companyName: true } },
+              },
+            },
+          },
+        },
         _count: {
           select: {
             agents: true,

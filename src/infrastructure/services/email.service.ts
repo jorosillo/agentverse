@@ -8,6 +8,7 @@
  * En desarrollo sin API key: los emails se loguean a consola.
  */
 import { Resend } from 'resend';
+import sanitizeHtml from 'sanitize-html';
 
 // ============================================================================
 // CONFIGURACIÓN (Lazy initialization para evitar errores de build)
@@ -27,6 +28,15 @@ function getResend(): Resend | null {
 
 const FROM_EMAIL = process.env.FROM_EMAIL || 'AgentVerse <noreply@agentverse.com>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+function escapeHtml(unsafe: string) {
+  // Sanitización estricta: elimina o escapa todas las etiquetas HTML no permitidas
+  return sanitizeHtml(unsafe, {
+    allowedTags: [], // Ninguna etiqueta permitida
+    allowedAttributes: {},
+    disallowedTagsMode: 'escape' // Convierte <script> a &lt;script&gt; en lugar de eliminarlo
+  });
+}
 
 // ============================================================================
 // FUNCIONES PÚBLICAS
@@ -101,6 +111,45 @@ export async function sendPasswordResetEmail(
         <p style="color: #6B7280; font-size: 14px;">
           Este enlace caduca en 30 minutos. Si no solicitaste este cambio, ignora este correo.
         </p>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Envía una notificación de cambio de estado en un acuerdo.
+ */
+export async function sendAgreementNotification(
+  email: string,
+  recipientName: string,
+  subject: string,
+  message: string,
+  conversationId: string
+): Promise<void> {
+  const chatUrl = `${APP_URL}/messages?conversationId=${conversationId}`;
+
+  const resend = getResend();
+  if (!resend) {
+    console.log(`[DEV] Notificación de acuerdo para ${email}: ${message} (${chatUrl})`);
+    return;
+  }
+
+  const safeRecipientName = escapeHtml(recipientName);
+  const safeMessage = escapeHtml(message);
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: subject,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #8B5CF6;">AgentVerse — Notificación</h1>
+        <p>Hola ${safeRecipientName},</p>
+        <p>${safeMessage}</p>
+        <a href="${chatUrl}" 
+           style="display: inline-block; padding: 12px 24px; background-color: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; margin: 16px 0;">
+          Ir al chat
+        </a>
       </div>
     `,
   });

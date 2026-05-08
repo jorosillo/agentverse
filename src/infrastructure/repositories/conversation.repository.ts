@@ -42,14 +42,14 @@ export const conversationRepository = {
       include: {
         participantA: {
           select: {
-            id: true, avatarUrl: true, role: true,
+            id: true, avatarUrl: true, role: true, email: true, emailPreferences: true,
             developerProfile: { select: { fullName: true } },
             companyProfile: { select: { companyName: true } },
           },
         },
         participantB: {
           select: {
-            id: true, avatarUrl: true, role: true,
+            id: true, avatarUrl: true, role: true, email: true, emailPreferences: true,
             developerProfile: { select: { fullName: true } },
             companyProfile: { select: { companyName: true } },
           },

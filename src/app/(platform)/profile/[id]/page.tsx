@@ -192,6 +192,66 @@ export default async function PublicProfilePage({ params }: Props) {
           </div>
         )}
       </div>
+
+      {/* Reviews section (HU-38) */}
+      <div className="mt-6 sm:mt-8">
+        <h2 className="text-xl font-bold text-white mb-6">Valoraciones</h2>
+        
+        {user.reviewsReceived && user.reviewsReceived.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {user.reviewsReceived.map((review) => {
+              const avg = (review.professionalRating + review.fulfillmentRating + review.communicationRating) / 3;
+              const reviewerName = review.reviewer.developerProfile?.fullName || review.reviewer.companyProfile?.companyName || 'Usuario';
+              
+              return (
+                <div key={review.id} className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors group">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-lg bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-[10px] font-bold text-violet-400">
+                        {reviewerName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{reviewerName}</p>
+                        <p className="text-[10px] text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-yellow-400/5 border border-yellow-400/10">
+                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                      <span className="text-xs font-bold text-yellow-400">{avg.toFixed(1)}</span>
+                    </div>
+                  </div>
+                  
+                  {review.comment && (
+                    <p className="text-xs text-gray-400 leading-relaxed italic mb-3">"{review.comment}"</p>
+                  )}
+
+                  <div className="flex items-center gap-3 pt-3 border-t border-white/5">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[9px] text-gray-600 uppercase">Pro.</span>
+                      <span className="text-[10px] text-gray-300 font-medium">{review.professionalRating}/5</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[9px] text-gray-600 uppercase">Cum.</span>
+                      <span className="text-[10px] text-gray-300 font-medium">{review.fulfillmentRating}/5</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[9px] text-gray-600 uppercase">Com.</span>
+                      <span className="text-[10px] text-gray-300 font-medium">{review.communicationRating}/5</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center bg-white/[0.01]">
+            <Star className="h-8 w-8 text-gray-600 mx-auto mb-3 opacity-20" />
+            <p className="text-sm text-gray-500">Este usuario aún no ha recibido valoraciones.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
