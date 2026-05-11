@@ -92,8 +92,7 @@ export function EditAgentForm({ agent }: Props) {
     }
 
     setSuccess(true);
-    router.refresh();
-    setTimeout(() => setSuccess(false), 3000);
+    router.push(`/agents/${agent.id}`);
   };
 
   const handleDelete = async () => {

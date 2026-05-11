@@ -92,8 +92,7 @@ export function EditJobForm({ job }: Props) {
     }
 
     setSuccess(true);
-    router.refresh();
-    setTimeout(() => setSuccess(false), 3000);
+    router.push(`/jobs/${job.id}`);
   };
 
   const handleDelete = async () => {

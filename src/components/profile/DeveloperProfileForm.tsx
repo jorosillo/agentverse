@@ -67,8 +67,7 @@ export function DeveloperProfileForm({ profile }: Props) {
     }
 
     setSuccess(true);
-    router.refresh();
-    setTimeout(() => setSuccess(false), 3000);
+    router.push(`/profile/${profile.userId}`);
   };
 
   return (
