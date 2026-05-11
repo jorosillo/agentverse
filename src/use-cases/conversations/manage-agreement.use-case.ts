@@ -8,6 +8,7 @@
  * - certify (Company): PENDING_CERTIFICATION → COMPLETED
  */
 import { conversationRepository } from '@/infrastructure/repositories/conversation.repository';
+import { moderationRepository } from '@/infrastructure/repositories/moderation.repository';
 import { sendAgreementNotification } from '@/infrastructure/services/email.service';
 import { messageRepository } from '@/infrastructure/repositories/message.repository';
 import { acceptProposalSchema, updateConversationStatusSchema } from '@/lib/schemas/message.schema';
@@ -129,6 +130,13 @@ export async function updateConversationStatusUseCase(
     }
 
     await conversationRepository.updateStatus(parsed.data.conversationId, 'COMPLETED');
+    
+    // Forzar recálculo de reputación para ambos participantes al completar un encargo (afecta positivamente al volumen)
+    await Promise.all([
+      moderationRepository.recalculateReputation(conversation.participantAId),
+      moderationRepository.recalculateReputation(conversation.participantBId)
+    ]);
+
     await messageRepository.create({
       conversationId: parsed.data.conversationId,
       senderId: session.userId,

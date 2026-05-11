@@ -68,7 +68,7 @@ export const profileRepository = {
   // --------------------------------------------------------------------------
 
   async getDeveloperDashboardStats(userId: string) {
-    const [agentsCount, totalViews, acceptedDeals, completedDeals, avgRating, recentAgents] =
+    const [agentsCount, totalViews, acceptedDeals, completedDeals, user, recentAgents] =
       await Promise.all([
         // Total de agentes publicados
         prisma.agent.count({ where: { authorId: userId, isActive: true } }),
@@ -95,14 +95,10 @@ export const profileRepository = {
           },
         }),
 
-        // Rating promedio recibido
-        prisma.reviewFeedback.aggregate({
-          where: { targetId: userId },
-          _avg: {
-            professionalRating: true,
-            fulfillmentRating: true,
-            communicationRating: true,
-          },
+        // Rating oficial (Reputation Score unificado)
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: { reputationScore: true },
         }),
 
         // Top 5 agentes recientes
@@ -120,13 +116,7 @@ export const profileRepository = {
         }),
       ]);
 
-    const avgProfessional = avgRating._avg.professionalRating ?? 0;
-    const avgFulfillment = avgRating._avg.fulfillmentRating ?? 0;
-    const avgCommunication = avgRating._avg.communicationRating ?? 0;
-    const overallRating =
-      avgProfessional + avgFulfillment + avgCommunication > 0
-        ? Number(((avgProfessional + avgFulfillment + avgCommunication) / 3).toFixed(1))
-        : 0;
+    const overallRating = user?.reputationScore ?? 0;
 
     return {
       agentsCount,
@@ -143,7 +133,7 @@ export const profileRepository = {
   // --------------------------------------------------------------------------
 
   async getCompanyDashboardStats(userId: string) {
-    const [jobsCount, totalViews, agentsHired, applications, avgRating, recentJobs] =
+    const [jobsCount, totalViews, agentsHired, applications, user, recentJobs] =
       await Promise.all([
         // Total de ofertas publicadas
         prisma.job.count({ where: { ownerCompanyId: userId, isActive: true } }),
@@ -170,14 +160,10 @@ export const profileRepository = {
           },
         }),
 
-        // Rating promedio recibido
-        prisma.reviewFeedback.aggregate({
-          where: { targetId: userId },
-          _avg: {
-            professionalRating: true,
-            fulfillmentRating: true,
-            communicationRating: true,
-          },
+        // Rating oficial (Reputation Score unificado)
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: { reputationScore: true },
         }),
 
         // Top 5 ofertas recientes
@@ -196,13 +182,7 @@ export const profileRepository = {
         }),
       ]);
 
-    const avgProfessional = avgRating._avg.professionalRating ?? 0;
-    const avgFulfillment = avgRating._avg.fulfillmentRating ?? 0;
-    const avgCommunication = avgRating._avg.communicationRating ?? 0;
-    const overallRating =
-      avgProfessional + avgFulfillment + avgCommunication > 0
-        ? Number(((avgProfessional + avgFulfillment + avgCommunication) / 3).toFixed(1))
-        : 0;
+    const overallRating = user?.reputationScore ?? 0;
 
     return {
       jobsCount,

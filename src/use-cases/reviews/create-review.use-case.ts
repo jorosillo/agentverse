@@ -5,6 +5,7 @@
  */
 import { reviewRepository } from '@/infrastructure/repositories/review.repository';
 import { conversationRepository } from '@/infrastructure/repositories/conversation.repository';
+import { moderationRepository } from '@/infrastructure/repositories/moderation.repository';
 import { createReviewSchema, type CreateReviewInput } from '@/lib/schemas/review.schema';
 import type { ActionResult, SessionUser } from '@/lib/types';
 
@@ -60,6 +61,9 @@ export async function createReviewUseCase(
     communicationRating: parsed.data.communicationRating,
     comment: parsed.data.comment || undefined,
   });
+
+  // Forzar recálculo inmediato de reputación para reflejarlo al instante en el dashboard y perfil
+  await moderationRepository.recalculateReputation(targetId);
 
   return { success: true, data: undefined };
 }
