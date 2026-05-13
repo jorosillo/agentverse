@@ -171,7 +171,7 @@ export function MessagesClient({ conversations, currentUserId, currentRole, init
   // Scroll to bottom on new messages
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages.length]);
 
   // Send message
   const handleSend = async () => {
