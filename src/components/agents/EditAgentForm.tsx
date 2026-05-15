@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Cpu, Code2, DollarSign, Upload, X, Plus, Save, Trash2, CheckCircle2,
+  Cpu, Code2, DollarSign, Upload, X, Plus, Save, Trash2, CheckCircle2, Tag,
 } from 'lucide-react';
 import { updateAgentSchema, type UpdateAgentInput } from '@/lib/schemas/agent.schema';
 import { updateAgent, deleteAgent } from '@/server-actions/agent.actions';
@@ -30,9 +30,10 @@ interface Props {
     images: string[];
     categories: { category: { id: string; name: string } }[];
   };
+  categories: { id: string; name: string; slug: string }[];
 }
 
-export function EditAgentForm({ agent }: Props) {
+export function EditAgentForm({ agent, categories }: Props) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -41,6 +42,9 @@ export function EditAgentForm({ agent }: Props) {
   const [imageUrls, setImageUrls] = useState<string[]>(agent.images);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    agent.categories.map((c) => c.category.id)
+  );
 
   const {
     register,
@@ -59,6 +63,15 @@ export function EditAgentForm({ agent }: Props) {
       categoryIds: agent.categories.map((c) => c.category.id),
     },
   });
+
+  // Category management
+  const toggleCategory = (categoryId: string) => {
+    const updated = selectedCategoryIds.includes(categoryId)
+      ? selectedCategoryIds.filter((id) => id !== categoryId)
+      : [...selectedCategoryIds, categoryId];
+    setSelectedCategoryIds(updated);
+    setValue('categoryIds', updated, { shouldValidate: true });
+  };
 
   const addTechnology = () => {
     const trimmed = techInput.trim();
@@ -144,6 +157,42 @@ export function EditAgentForm({ agent }: Props) {
               <p className="text-xs text-red-400">{errors.longDescription.message}</p>
             )}
           </div>
+        </div>
+
+        {/* Categories */}
+        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Tag className="h-5 w-5 text-violet-400" />
+            Categoría
+          </h2>
+
+          {categories.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => {
+                const isSelected = selectedCategoryIds.includes(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                      isSelected
+                        ? 'bg-violet-600/20 border-violet-500/40 text-violet-300'
+                        : 'bg-white/[0.02] border-white/10 text-gray-500 hover:text-gray-300 hover:border-white/20'
+                    }`}
+                  >
+                    {isSelected && <CheckCircle2 className="inline h-3 w-3 mr-1" />}
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500">No hay categorías disponibles.</p>
+          )}
+          {errors.categoryIds?.message && (
+            <p className="text-xs text-red-400">{errors.categoryIds.message}</p>
+          )}
         </div>
 
         {/* Technologies */}

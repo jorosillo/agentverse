@@ -116,3 +116,19 @@ export async function getMyAgents() {
     return { success: false as const, error: 'Error al obtener tus agentes.' };
   }
 }
+
+// ============================================================================
+// CATEGORIES
+// ============================================================================
+
+/**
+ * Obtiene todas las categorías disponibles para agentes.
+ */
+export async function getAllCategories() {
+  try {
+    const { agentRepository } = await import('@/infrastructure/repositories/agent.repository');
+    return { success: true as const, data: await agentRepository.findAllCategories() };
+  } catch {
+    return { success: false as const, error: 'Error al obtener categorías.' };
+  }
+}

@@ -211,4 +211,15 @@ export const agentRepository = {
       where: { authorId, createdAt: { gte: today } },
     });
   },
+
+  // --------------------------------------------------------------------------
+  // CATEGORÍAS
+  // --------------------------------------------------------------------------
+
+  async findAllCategories() {
+    return prisma.category.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, slug: true },
+    });
+  },
 };

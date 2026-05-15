@@ -5,7 +5,7 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentSession } from '@/server-actions/auth.actions';
-import { getAgentById } from '@/server-actions/agent.actions';
+import { getAgentById, getAllCategories } from '@/server-actions/agent.actions';
 import { EditAgentForm } from '@/components/agents/EditAgentForm';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -25,12 +25,17 @@ export default async function EditAgentPage({ params }: Props) {
   if (session.role !== 'DEVELOPER') redirect('/dashboard');
 
   const { id } = await params;
-  const result = await getAgentById(id);
+  const [result, categoriesResult] = await Promise.all([
+    getAgentById(id),
+    getAllCategories(),
+  ]);
 
   if (!result.success || !result.data) notFound();
 
   // Solo el autor puede editar
   if (result.data.authorId !== session.userId) redirect('/dashboard');
+
+  const categories = categoriesResult.success ? categoriesResult.data : [];
 
   return (
     <div className="page-shell-narrow">
@@ -49,7 +54,7 @@ export default async function EditAgentPage({ params }: Props) {
         </p>
       </div>
 
-      <EditAgentForm agent={result.data} />
+      <EditAgentForm agent={result.data} categories={categories} />
     </div>
   );
 }

@@ -4,6 +4,7 @@
  */
 import { redirect } from 'next/navigation';
 import { getCurrentSession } from '@/server-actions/auth.actions';
+import { getAllCategories } from '@/server-actions/agent.actions';
 import { CreateAgentForm } from '@/components/agents/CreateAgentForm';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -18,6 +19,9 @@ export default async function NewAgentPage() {
   const session = await getCurrentSession();
   if (!session) redirect('/login');
   if (session.role !== 'DEVELOPER') redirect('/dashboard');
+
+  const categoriesResult = await getAllCategories();
+  const categories = categoriesResult.success ? categoriesResult.data : [];
 
   return (
     <div className="page-shell-narrow">
@@ -36,7 +40,7 @@ export default async function NewAgentPage() {
         </p>
       </div>
 
-      <CreateAgentForm />
+      <CreateAgentForm categories={categories} />
     </div>
   );
 }
