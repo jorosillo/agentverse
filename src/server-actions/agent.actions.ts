@@ -117,6 +117,25 @@ export async function getMyAgents() {
   }
 }
 
+/**
+ * Sube imágenes de agente a Vercel Blob.
+ */
+export async function uploadAgentImages(formData: FormData): Promise<ActionResult<string[]>> {
+  try {
+    await requireSession(); // Solo usuarios logueados pueden subir
+    const files = formData.getAll('files') as File[];
+    
+    if (files.length === 0) return { success: true, data: [] };
+
+    const { uploadMultipleImages } = await import('@/infrastructure/services/storage.service');
+    const urls = await uploadMultipleImages(files, 'agents');
+    
+    return { success: true, data: urls };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Error al subir imágenes.' };
+  }
+}
+
 // ============================================================================
 // CATEGORIES
 // ============================================================================

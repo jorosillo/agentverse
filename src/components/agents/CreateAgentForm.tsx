@@ -32,7 +32,8 @@ export function CreateAgentForm({ categories }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [technologies, setTechnologies] = useState<string[]>([]);
   const [techInput, setTechInput] = useState('');
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
@@ -88,55 +89,77 @@ export function CreateAgentForm({ categories }: Props) {
     }
   };
 
-  // Image upload (placeholder: stores as data URLs for now, production would use Vercel Blob)
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Image handling
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    if (imageUrls.length + files.length > MAX_IMAGES) {
+    if (imageFiles.length + files.length > MAX_IMAGES) {
       setServerError(`Máximo ${MAX_IMAGES} imágenes permitidas.`);
       return;
     }
 
-    setUploading(true);
     setServerError(null);
 
-    for (const file of Array.from(files)) {
+    const newFiles = Array.from(files);
+    for (const file of newFiles) {
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        setServerError('Formato de imagen no soportado. Usa PNG, JPG, GIF o WebP.');
-        setUploading(false);
+        setServerError('Formato de imagen no soportado.');
         return;
       }
       if (file.size > MAX_IMAGE_SIZE) {
         setServerError('La imagen no puede exceder 10MB.');
-        setUploading(false);
         return;
       }
+    }
 
-      // For MVP: use base64 data URL (producción usaría Vercel Blob)
+    setImageFiles((prev) => [...prev, ...newFiles]);
+    
+    // Create previews
+    newFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === 'string') {
-          setImageUrls((prev) => [...prev, reader.result as string]);
+          setPreviews((prev) => [...prev, reader.result as string]);
         }
       };
       reader.readAsDataURL(file);
-    }
-
-    setUploading(false);
+    });
   };
 
   const removeImage = (index: number) => {
-    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: CreateAgentInput) => {
     setServerError(null);
+    setUploading(true);
 
-    const result = await createAgent(data, imageUrls);
+    let finalImageUrls: string[] = [];
+
+    // 1. Upload images if any
+    if (imageFiles.length > 0) {
+      const formData = new FormData();
+      imageFiles.forEach((file) => formData.append('files', file));
+      
+      const { uploadAgentImages } = await import('@/server-actions/agent.actions');
+      const uploadResult = await uploadAgentImages(formData);
+      
+      if (!uploadResult.success) {
+        setServerError(uploadResult.error);
+        setUploading(false);
+        return;
+      }
+      finalImageUrls = uploadResult.data;
+    }
+
+    // 2. Create agent
+    const result = await createAgent(data, finalImageUrls);
 
     if (!result.success) {
       setServerError(result.error);
+      setUploading(false);
       return;
     }
 
@@ -314,10 +337,10 @@ export function CreateAgentForm({ categories }: Props) {
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Upload className="h-5 w-5 text-violet-400" />
-          Imágenes <span className="text-xs text-gray-500 font-normal">({imageUrls.length}/{MAX_IMAGES})</span>
+          Imágenes <span className="text-xs text-gray-500 font-normal">({previews.length}/{MAX_IMAGES})</span>
         </h2>
 
-        {imageUrls.length < MAX_IMAGES && (
+        {previews.length < MAX_IMAGES && (
           <label className="flex items-center justify-center h-32 rounded-xl border-2 border-dashed border-white/10 hover:border-violet-500/30 transition-all cursor-pointer group">
             <input
               type="file"
@@ -335,9 +358,9 @@ export function CreateAgentForm({ categories }: Props) {
           </label>
         )}
 
-        {imageUrls.length > 0 && (
+        {previews.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {imageUrls.map((url, i) => (
+            {previews.map((url, i) => (
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
                 <img src={url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
                 <button
